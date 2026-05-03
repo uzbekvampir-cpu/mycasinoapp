@@ -8,8 +8,8 @@
     <style>
         body { font-family: sans-serif; text-align: center; background: #1a1a1a; color: white; margin: 0; padding: 10px; overflow: hidden; }
         .balance-box { font-size: 22px; font-weight: bold; color: #4cd137; background: #2c3e50; padding: 10px; border-radius: 12px; margin-bottom: 10px; }
-        #wheel-container { position: relative; width: 300px; height: 300px; margin: 10px auto; }
-        canvas { width: 100%; height: 100%; transition: transform 6s cubic-bezier(0.15, 0, 0.2, 1); border-radius: 50%; }
+        #wheel-container { position: relative; width: 300px; height: 300px; margin: 10px auto; display: block; }
+        canvas { width: 300px; height: 300px; transition: transform 6s cubic-bezier(0.15, 0, 0.2, 1); border-radius: 50%; display: block; }
         #pointer { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); width: 0; height: 0; 
                     border-left: 15px solid transparent; border-right: 15px solid transparent; 
                     border-top: 30px solid #ffd700; z-index: 10; }
@@ -38,41 +38,72 @@
         const tg = window.Telegram.WebApp;
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
+        
+        // Массив чисел в правильном порядке для европейской рулетки
         const sectors = [0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23, 10, 5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26];
+        
         const arc = 2 * Math.PI / sectors.length;
         let rotation = 0;
 
+        // Получаем баланс из URL
         const params = new URLSearchParams(window.location.search);
         document.getElementById('val').innerText = params.get('balance') || '1000';
 
         function draw() {
             const cx = 250, cy = 250, r = 240;
-            sectors.forEach((num, i) => {
+            ctx.clearRect(0, 0, 500, 500);
+            
+            for (let i = 0; i < sectors.length; i++) {
                 const angle = i * arc;
+                const num = sectors[i];
+                
                 ctx.beginPath();
+                // 0 - зеленый, четные индексы - красный, нечетные - синий/черный
                 ctx.fillStyle = num === 0 ? "#27ae60" : (i % 2 === 0 ? "#c0392b" : "#2c3e50");
-                ctx.moveTo(cx, cy); ctx.arc(cx, cy, r, angle, angle + arc); ctx.fill();
-                ctx.save(); ctx.translate(cx, cy); ctx.rotate(angle + arc / 2);
-                ctx.textAlign = "right"; ctx.fillStyle = "#fff"; ctx.font = "bold 20px Arial";
-                ctx.fillText(num, r - 20, 10); ctx.restore();
-            });
+                ctx.moveTo(cx, cy);
+                ctx.arc(cx, cy, r, angle, angle + arc);
+                ctx.fill();
+                ctx.strokeStyle = "#ffffff";
+                ctx.lineWidth = 1;
+                ctx.stroke();
+
+                ctx.save();
+                ctx.translate(cx, cy);
+                ctx.rotate(angle + arc / 2);
+                ctx.textAlign = "right";
+                ctx.fillStyle = "#fff";
+                ctx.font = "bold 20px Arial";
+                ctx.fillText(num.toString(), r - 20, 10);
+                ctx.restore();
+            }
         }
-        draw();
+        
+        // Рисуем сразу при загрузке
+        window.onload = draw;
 
         document.getElementById('spin').onclick = function() {
-            this.disabled = true;
+            const btn = this;
+            btn.disabled = true;
+            
+            // Случайное вращение (минимум 5 полных оборотов)
             const extra = 1800 + Math.floor(Math.random() * 360); 
             rotation += extra;
             canvas.style.transform = `rotate(${-rotation}deg)`;
+            
             setTimeout(() => {
                 const netRot = rotation % 360;
-                const winIdx = Math.floor(((netRot + 270) % 360) / (360 / sectors.length));
-                tg.sendData(JSON.stringify({
+                const sectorDeg = 360 / sectors.length;
+                // Индекс выигрышного сектора (учитываем смещение стрелки на 270 град)
+                const winIdx = Math.floor(((netRot + 270) % 360) / sectorDeg);
+                
+                const result = {
                     number: document.getElementById('num').value,
                     amount: document.getElementById('amt').value,
                     win: sectors[winIdx]
-                }));
-                this.disabled = false;
+                };
+                
+                tg.sendData(JSON.stringify(result));
+                btn.disabled = false;
             }, 6000);
         };
         tg.expand();
