@@ -3,34 +3,66 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Roulette Pro</title>
+    <title>Classic Roulette</title>
     <script src="https://telegram.org"></script>
     <style>
-        body { font-family: sans-serif; text-align: center; background: #1a1a1a; color: white; margin: 0; padding: 10px; overflow: hidden; }
-        .balance-box { font-size: 22px; font-weight: bold; color: #4cd137; background: #2c3e50; padding: 10px; border-radius: 12px; margin-bottom: 10px; border: 1px solid #34495e; }
-        #wheel-container { position: relative; width: 300px; height: 300px; margin: 15px auto; }
-        canvas { width: 100%; height: 100%; transition: transform 6s cubic-bezier(0.15, 0, 0.2, 1); border-radius: 50%; display: block; }
-        #pointer { position: absolute; top: -15px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 15px solid transparent; border-right: 15px solid transparent; border-top: 30px solid #ffd700; z-index: 10; }
-        .ui-panel { background: #2c3e50; padding: 15px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        body { font-family: 'Georgia', serif; text-align: center; background: #0f2027; background: linear-gradient(to bottom, #2c5364, #203a43, #0f2027); color: white; margin: 0; padding: 10px; overflow: hidden; }
+        .balance-box { font-size: 20px; font-weight: bold; color: #ffd700; background: rgba(0,0,0,0.5); padding: 10px; border-radius: 50px; margin-bottom: 10px; border: 2px solid #8e44ad; }
+        
+        #wheel-container { 
+            position: relative; width: 330px; height: 330px; margin: 15px auto; 
+            border: 12px solid #5d4037; border-radius: 50%; 
+            box-shadow: 0 0 50px rgba(0,0,0,0.8), inset 0 0 20px rgba(0,0,0,0.5);
+            background: #3e2723; /* Цвет внешнего кольца дерева */
+        }
+        
+        canvas { width: 100%; height: 100%; transition: transform 6s cubic-bezier(0.1, 0, 0.1, 1); border-radius: 50%; }
+        
+        /* Золотая серединка (спицы как на фото) */
+        #wheel-center {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 80px; height: 80px; background: radial-gradient(circle, #f1c40f, #d4af37, #8a6d3b);
+            border-radius: 50%; z-index: 5; border: 2px solid #5d4037;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        }
+
+        #pointer { 
+            position: absolute; top: -25px; left: 50%; transform: translateX(-50%); 
+            width: 0; height: 0; border-left: 15px solid transparent; 
+            border-right: 15px solid transparent; border-top: 40px solid #ffd700; 
+            z-index: 10; filter: drop-shadow(0 2px 5px #000);
+        }
+
+        .ui-panel { background: rgba(0,0,0,0.6); padding: 15px; border-radius: 25px; border: 1px solid #d4af37; }
         .row { display: flex; justify-content: space-around; margin-bottom: 15px; }
-        input { width: 80px; padding: 10px; border-radius: 8px; border: none; font-size: 18px; text-align: center; color: #000; }
-        label { font-size: 12px; color: #bdc3c7; margin-bottom: 5px; display: block; }
-        button { background: #4cd137; border: none; padding: 18px; font-size: 20px; color: white; font-weight: bold; border-radius: 15px; width: 100%; cursor: pointer; box-shadow: 0 4px #2bad1d; }
-        button:disabled { background: #7f8c8d; box-shadow: none; }
+        input { width: 80px; padding: 12px; border-radius: 10px; border: 2px solid #d4af37; font-size: 18px; text-align: center; background: #fff; }
+        label { font-size: 12px; color: #ffd700; margin-bottom: 5px; display: block; font-weight: bold; }
+        
+        button { 
+            background: linear-gradient(180deg, #d4af37, #8a6d3b); border: none; 
+            padding: 18px; font-size: 22px; color: white; font-weight: bold; 
+            border-radius: 50px; width: 100%; cursor: pointer; 
+            box-shadow: 0 6px #5d4037; text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+        button:active { transform: translateY(3px); box-shadow: 0 3px #5d4037; }
+        button:disabled { background: #7f8c8d; box-shadow: none; opacity: 0.5; }
     </style>
 </head>
 <body>
-    <div class="balance-box">Баланс: <span id="val">1000</span> 💰</div>
+    <div class="balance-box">💰 БАЛАНС: <span id="val">1000</span></div>
+    
     <div id="wheel-container">
         <div id="pointer"></div>
-        <canvas id="canvas" width="500" height="500"></canvas>
+        <div id="wheel-center"></div>
+        <canvas id="canvas" width="600" height="600"></canvas>
     </div>
+
     <div class="ui-panel">
         <div class="row">
-            <div><label>ЧИСЛО</label><input type="number" id="num" min="0" max="36" value="7"></div>
-            <div><label>СТАВКА</label><input type="number" id="amt" min="10" value="100"></div>
+            <div><label>ЧИСЛО (0-36)</label><input type="number" id="num" min="0" max="36" value="7"></div>
+            <div><label>СТАВКА</label><input type="number" id="amt" min="10" step="50" value="100"></div>
         </div>
-        <button id="spin-btn">КРУТИТЬ 🎰</button>
+        <button id="spin-btn">ИГРАТЬ 🎲</button>
     </div>
 
     <script>
@@ -38,9 +70,8 @@
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
         
-        // Массив чисел в классическом порядке европейской рулетки
+        // Классическая последовательность чисел
         const sectors = [0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23, 10, 5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26];
-        
         const arc = 2 * Math.PI / sectors.length;
         let rotation = 0;
 
@@ -48,30 +79,46 @@
         document.getElementById('val').innerText = params.get('balance') || '1000';
 
         function draw() {
-            const cx = 250, cy = 250, r = 240;
-            ctx.clearRect(0, 0, 500, 500);
-            for (let i = 0; i < sectors.length; i++) {
+            const cx = 300, cy = 300, r = 280;
+            ctx.clearRect(0, 0, 600, 600);
+            
+            sectors.forEach((num, i) => {
                 const angle = i * arc;
                 ctx.beginPath();
-                ctx.fillStyle = sectors[i] === 0 ? "#27ae60" : (i % 2 === 0 ? "#c0392b" : "#2c3e50");
-                ctx.moveTo(cx, cy); ctx.arc(cx, cy, r, angle, angle + arc); ctx.fill();
-                ctx.strokeStyle = "#fff"; ctx.lineWidth = 1; ctx.stroke();
-                ctx.save(); ctx.translate(cx, cy); ctx.rotate(angle + arc / 2);
-                ctx.textAlign = "right"; ctx.fillStyle = "#fff"; ctx.font = "bold 20px Arial";
-                ctx.fillText(sectors[i].toString(), r - 20, 10); ctx.restore();
-            }
+                // Цвета секторов как на картинке
+                ctx.fillStyle = num === 0 ? "#27ae60" : (i % 2 === 0 ? "#c0392b" : "#1a1a1a");
+                ctx.moveTo(cx, cy);
+                ctx.arc(cx, cy, r, angle, angle + arc);
+                ctx.fill();
+                ctx.strokeStyle = "#d4af37"; // Золотые разделители
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                // Рисуем числа
+                ctx.save();
+                ctx.translate(cx, cy);
+                ctx.rotate(angle + arc / 2);
+                ctx.textAlign = "right";
+                ctx.fillStyle = "white";
+                ctx.font = "bold 24px serif";
+                ctx.fillText(num.toString(), r - 30, 10);
+                ctx.restore();
+            });
         }
         
         window.onload = draw;
 
         document.getElementById('spin-btn').onclick = function() {
             this.disabled = true;
-            const extra = 1800 + Math.floor(Math.random() * 360); 
+            // 6-10 оборотов + случайный сектор
+            const extra = 2160 + Math.floor(Math.random() * 360); 
             rotation += extra;
             canvas.style.transform = `rotate(${-rotation}deg)`;
+            
             setTimeout(() => {
                 const netRot = rotation % 360;
                 const winIdx = Math.floor(((netRot + 270) % 360) / (360 / sectors.length));
+                
                 tg.sendData(JSON.stringify({
                     number: document.getElementById('num').value,
                     amount: document.getElementById('amt').value,
