@@ -3,50 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Roulette Casino</title>
+    <title>Roulette</title>
     <script src="https://telegram.org"></script>
     <style>
         body { font-family: sans-serif; text-align: center; background: #1a1a1a; color: white; margin: 0; padding: 10px; overflow: hidden; }
-        .balance-box { font-size: 22px; font-weight: bold; color: #4cd137; background: #2c3e50; padding: 10px; border-radius: 12px; margin-bottom: 10px; border: 2px solid #34495e; }
-        
-        #wheel-container { position: relative; width: 320px; height: 320px; margin: 10px auto; }
+        .balance-box { font-size: 22px; font-weight: bold; color: #4cd137; background: #2c3e50; padding: 10px; border-radius: 12px; margin-bottom: 10px; }
+        #wheel-container { position: relative; width: 300px; height: 300px; margin: 10px auto; }
         canvas { width: 100%; height: 100%; transition: transform 6s cubic-bezier(0.15, 0, 0.2, 1); border-radius: 50%; }
-        
         #pointer { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); width: 0; height: 0; 
                     border-left: 15px solid transparent; border-right: 15px solid transparent; 
-                    border-top: 30px solid #ffd700; z-index: 10; filter: drop-shadow(0 2px 5px #000); }
-
-        .ui-panel { background: #2c3e50; padding: 15px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+                    border-top: 30px solid #ffd700; z-index: 10; }
+        .ui-panel { background: #2c3e50; padding: 15px; border-radius: 20px; }
         .row { display: flex; justify-content: space-around; margin-bottom: 15px; }
-        .input-item { display: flex; flex-direction: column; }
-        input { width: 80px; padding: 10px; border-radius: 8px; border: none; font-size: 18px; text-align: center; background: #fff; color: #000; }
-        label { font-size: 12px; color: #bdc3c7; margin-bottom: 5px; font-weight: bold; }
-        
-        button { background: linear-gradient(180deg, #4cd137, #44bd32); border: none; padding: 18px; font-size: 20px; 
-                 color: white; font-weight: bold; border-radius: 15px; cursor: pointer; width: 100%; 
-                 box-shadow: 0 5px #2bad1d; transition: 0.1s; }
-        button:active { transform: translateY(3px); box-shadow: 0 2px #2bad1d; }
-        button:disabled { background: #7f8c8d; box-shadow: none; opacity: 0.5; }
+        input { width: 80px; padding: 10px; border-radius: 8px; border: none; font-size: 18px; text-align: center; }
+        button { background: #4cd137; border: none; padding: 18px; font-size: 20px; color: white; font-weight: bold; border-radius: 15px; width: 100%; cursor: pointer; }
+        button:disabled { background: #7f8c8d; }
     </style>
 </head>
 <body>
-    <div class="balance-box">Баланс: <span id="val">0</span> 💰</div>
-
+    <div class="balance-box">Баланс: <span id="val">1000</span> 💰</div>
     <div id="wheel-container">
         <div id="pointer"></div>
         <canvas id="canvas" width="500" height="500"></canvas>
     </div>
-
     <div class="ui-panel">
         <div class="row">
-            <div class="input-item">
-                <label>ЧИСЛО (0-36)</label>
-                <input type="number" id="num" min="0" max="36" value="7">
-            </div>
-            <div class="input-item">
-                <label>СТАВКА</label>
-                <input type="number" id="amt" min="10" step="10" value="100">
-            </div>
+            <div><label>ЧИСЛО</label><br><input type="number" id="num" min="0" max="36" value="7"></div>
+            <div><label>СТАВКА</label><br><input type="number" id="amt" min="10" value="100"></div>
         </div>
         <button id="spin">КРУТИТЬ 🎰</button>
     </div>
@@ -55,62 +38,38 @@
         const tg = window.Telegram.WebApp;
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
-        const balanceSpan = document.getElementById('val');
-        
-        // Числа европейской рулетки в правильном порядке
         const sectors = [0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23, 10, 5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26];
         const arc = 2 * Math.PI / sectors.length;
         let rotation = 0;
 
-        // Инициализация баланса из URL
         const params = new URLSearchParams(window.location.search);
-        balanceSpan.innerText = params.get('balance') || '1000';
+        document.getElementById('val').innerText = params.get('balance') || '1000';
 
         function draw() {
             const cx = 250, cy = 250, r = 240;
-            ctx.clearRect(0, 0, 500, 500);
             sectors.forEach((num, i) => {
                 const angle = i * arc;
                 ctx.beginPath();
-                ctx.fillStyle = num === 0 ? "#27ae60" : (i % 2 === 0 ? "#e74c3c" : "#2c3e50");
-                ctx.moveTo(cx, cy);
-                ctx.arc(cx, cy, r, angle, angle + arc);
-                ctx.fill();
-                ctx.strokeStyle = "#fff";
-                ctx.stroke();
-
-                ctx.save();
-                ctx.translate(cx, cy);
-                ctx.rotate(angle + arc / 2);
-                ctx.textAlign = "right";
-                ctx.fillStyle = "#fff";
-                ctx.font = "bold 20px Arial";
-                ctx.fillText(num, r - 20, 10);
-                ctx.restore();
+                ctx.fillStyle = num === 0 ? "#27ae60" : (i % 2 === 0 ? "#c0392b" : "#2c3e50");
+                ctx.moveTo(cx, cy); ctx.arc(cx, cy, r, angle, angle + arc); ctx.fill();
+                ctx.save(); ctx.translate(cx, cy); ctx.rotate(angle + arc / 2);
+                ctx.textAlign = "right"; ctx.fillStyle = "#fff"; ctx.font = "bold 20px Arial";
+                ctx.fillText(num, r - 20, 10); ctx.restore();
             });
         }
         draw();
 
         document.getElementById('spin').onclick = function() {
-            const betNum = parseInt(document.getElementById('num').value);
-            const betAmt = parseInt(document.getElementById('amt').value);
-            
-            if (betNum < 0 || betNum > 36) return alert("Выбери 0-36");
-            
             this.disabled = true;
             const extra = 1800 + Math.floor(Math.random() * 360); 
             rotation += extra;
             canvas.style.transform = `rotate(${-rotation}deg)`;
-
             setTimeout(() => {
                 const netRot = rotation % 360;
-                const secDeg = 360 / sectors.length;
-                // Расчет с учетом того, что 0-й сектор начинается справа, а стрелка сверху (270°)
-                const winIdx = Math.floor(((netRot + 270) % 360) / secDeg);
-                
+                const winIdx = Math.floor(((netRot + 270) % 360) / (360 / sectors.length));
                 tg.sendData(JSON.stringify({
-                    number: betNum,
-                    amount: betAmt,
+                    number: document.getElementById('num').value,
+                    amount: document.getElementById('amt').value,
                     win: sectors[winIdx]
                 }));
                 this.disabled = false;
