@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Casino Mini App</title>
+    <script src="https://telegram.org"></script>
+    <style>
+        body { font-family: sans-serif; text-align: center; background: #1a1a1a; color: white; margin: 0; padding: 20px; }
+        #wheel-container { position: relative; width: 300px; height: 300px; margin: 20px auto; }
+        #wheel { width: 100%; height: 100%; border-radius: 50%; border: 5px solid #ffd700; 
+                 transition: transform 4s cubic-bezier(0.1, 0, 0.2, 1); background: conic-gradient(
+                    #e74c3c 0deg 30deg, #2c3e50 30deg 60deg, #e74c3c 60deg 90deg, #2c3e50 90deg 120deg,
+                    #e74c3c 120deg 150deg, #2c3e50 150deg 180deg, #e74c3c 180deg 210deg, #2c3e50 210deg 240deg,
+                    #e74c3c 240deg 270deg, #2c3e50 270deg 300deg, #e74c3c 300deg 330deg, #2c3e50 330deg 360deg
+                 ); }
+        #pointer { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); 
+                    width: 0; height: 0; border-left: 15px solid transparent; border-right: 15px solid transparent;
+                    border-top: 30px solid #ffd700; z-index: 10; }
+        button { background: #ffd700; border: none; padding: 15px 30px; font-size: 18px; 
+                 font-weight: bold; border-radius: 10px; cursor: pointer; margin-top: 20px; }
+        .balance { font-size: 24px; margin-bottom: 10px; color: #4cd137; }
+    </style>
+</head>
+<body>
+    <div class="balance">Ставка: 100</div>
+    <div id="wheel-container">
+        <div id="pointer"></div>
+        <div id="wheel"></div>
+    </div>
+    <button id="spin-btn">КРУТИТЬ 🎰</button>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand(); // Расширить на весь экран
+
+        const wheel = document.getElementById('wheel');
+        const btn = document.getElementById('spin-btn');
+        let currentRotation = 0;
+
+        btn.addEventListener('click', () => {
+            btn.disabled = true;
+            const extraDegrees = Math.floor(Math.random() * 360) + 1440; // Минимум 4 полных круга
+            currentRotation += extraDegrees;
+            wheel.style.transform = `rotate(${currentRotation}deg)`;
+
+            setTimeout(() => {
+                const finalDegree = currentRotation % 360;
+                // Отправляем результат боту (просто для примера, что анимация закончена)
+                tg.sendData(JSON.stringify({
+                    action: 'spin_finished',
+                    degree: finalDegree
+                }));
+                btn.disabled = false;
+            }, 4000);
+        });
+    </script>
+</body>
+</html>
