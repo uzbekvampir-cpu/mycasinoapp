@@ -3,86 +3,139 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pro Roulette</title>
+    <title>Roulette Numbers</title>
     <script src="https://telegram.org"></script>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; text-align: center; background: #1a1a1a; color: white; margin: 0; padding: 20px; }
+        body { font-family: sans-serif; text-align: center; background: #1a1a1a; color: white; margin: 0; padding: 10px; overflow: hidden; }
         .container { max-width: 400px; margin: 0 auto; }
         
-        /* Стили рулетки */
-        #wheel-container { position: relative; width: 320px; height: 320px; margin: 20px auto; }
-        #wheel { 
-            width: 100%; height: 100%; border-radius: 50%; border: 8px solid #333;
-            background: conic-gradient(from 0deg, #2ecc71 0% 2.7%, #e74c3c 2.7% 5.4%, #2c3e50 5.4% 8.1%, #e74c3c 8.1% 10.8%, #2c3e50 10.8% 13.5%, #e74c3c 13.5% 16.2%, #2c3e50 16.2% 18.9%, #e74c3c 18.9% 21.6%, #2c3e50 21.6% 24.3%, #e74c3c 24.3% 27%, #2c3e50 27% 29.7%, #e74c3c 29.7% 32.4%, #2c3e50 32.4% 35.1%, #e74c3c 35.1% 37.8%, #2c3e50 37.8% 40.5%, #e74c3c 40.5% 43.2%, #2c3e50 43.2% 45.9%, #e74c3c 45.9% 48.6%, #2c3e50 48.6% 51.3%, #e74c3c 51.3% 54%, #2c3e50 54% 56.7%, #e74c3c 56.7% 59.4%, #2c3e50 59.4% 62.1%, #e74c3c 62.1% 64.8%, #2c3e50 64.8% 67.5%, #e74c3c 67.5% 70.2%, #2c3e50 70.2% 72.9%, #e74c3c 72.9% 75.6%, #2c3e50 75.6% 78.3%, #e74c3c 78.3% 81%, #2c3e50 81% 83.7%, #e74c3c 83.7% 86.4%, #2c3e50 86.4% 89.1%, #e74c3c 89.1% 91.8%, #2c3e50 91.8% 94.5%, #e74c3c 94.5% 97.2%, #2c3e50 97.2% 100%);
-            transition: transform 6s cubic-bezier(0.15, 0, 0.15, 1); /* Анимация 6 секунд */
+        #wheel-container { position: relative; width: 330px; height: 330px; margin: 10px auto; }
+        #canvas { width: 100%; height: 100%; transition: transform 6s cubic-bezier(0.15, 0, 0.15, 1); }
+        
+        #pointer { 
+            position: absolute; top: -10px; left: 50%; transform: translateX(-50%); 
+            width: 0; height: 0; border-left: 15px solid transparent; 
+            border-right: 15px solid transparent; border-top: 30px solid #ffd700; 
+            z-index: 10; filter: drop-shadow(0 2px 5px rgba(0,0,0,0.5));
         }
-        #pointer { position: absolute; top: -15px; left: 50%; transform: translateX(-50%); width: 0; height: 0; 
-                    border-left: 15px solid transparent; border-right: 15px solid transparent; border-top: 30px solid #ffd700; z-index: 10; }
 
-        /* Настройки игры */
-        .controls { background: #2c3e50; padding: 15px; border-radius: 15px; margin-top: 20px; }
-        input { width: 80px; padding: 10px; border-radius: 5px; border: none; font-size: 16px; margin: 5px; }
-        label { display: block; font-size: 14px; color: #bdc3c7; }
-        button { background: #4cd137; border: none; padding: 15px 40px; font-size: 20px; color: white; font-weight: bold; border-radius: 10px; cursor: pointer; margin-top: 15px; width: 100%; }
-        button:disabled { background: #7f8c8d; }
+        .controls { background: #2c3e50; padding: 15px; border-radius: 20px; margin-top: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        .input-group { display: flex; justify-content: space-around; margin-bottom: 15px; }
+        input { width: 70px; padding: 10px; border-radius: 8px; border: none; font-size: 18px; text-align: center; }
+        label { display: block; font-size: 12px; color: #bdc3c7; margin-bottom: 5px; }
+        
+        button { 
+            background: linear-gradient(180deg, #4cd137, #44bd32); border: none; 
+            padding: 15px; font-size: 20px; color: white; font-weight: bold; 
+            border-radius: 12px; cursor: pointer; width: 100%; transition: 0.2s;
+        }
+        button:active { transform: scale(0.98); }
+        button:disabled { background: #7f8c8d; opacity: 0.6; }
     </style>
 </head>
 <body>
     <div class="container">
         <div id="wheel-container">
             <div id="pointer"></div>
-            <div id="wheel"></div>
+            <canvas id="canvas" width="500" height="500"></canvas>
         </div>
 
         <div class="controls">
-            <div style="display: flex; justify-content: space-around;">
+            <div class="input-group">
                 <div>
-                    <label>Ваше число (1-36)</label>
+                    <label>ЧИСЛО (1-36)</label>
                     <input type="number" id="bet-number" min="1" max="36" value="1">
                 </div>
                 <div>
-                    <label>Ставка</label>
+                    <label>СТАВКА</label>
                     <input type="number" id="bet-amount" min="10" step="10" value="100">
                 </div>
             </div>
-            <button id="spin-btn">ИГРАТЬ</button>
+            <button id="spin-btn">ИГРАТЬ 🎰</button>
         </div>
     </div>
 
     <script>
         const tg = window.Telegram.WebApp;
-        const wheel = document.getElementById('wheel');
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
         const btn = document.getElementById('spin-btn');
+        
+        const sectors = [0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23, 10, 5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26];
+        const numSectors = sectors.length;
+        const arc = 2 * Math.PI / numSectors;
         let currentRotation = 0;
 
-        btn.addEventListener('click', () => {
-            const betNumber = document.getElementById('bet-number').value;
-            const betAmount = document.getElementById('bet-amount').value;
+        // Рисуем колесо
+        function drawWheel() {
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const radius = canvas.width / 2 - 10;
 
-            if (betNumber < 1 || betNumber > 36) {
-                alert("Выберите число от 1 до 36!");
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            sectors.forEach((num, i) => {
+                const angle = i * arc;
+                ctx.beginPath();
+                ctx.fillStyle = num === 0 ? "#2ecc71" : (i % 2 === 0 ? "#2c3e50" : "#e74c3c");
+                ctx.moveTo(centerX, centerY);
+                ctx.arc(centerX, centerY, radius, angle, angle + arc);
+                ctx.lineTo(centerX, centerY);
+                ctx.fill();
+                ctx.strokeStyle = "white";
+                ctx.lineWidth = 1;
+                ctx.stroke();
+
+                // Рисуем текст
+                ctx.save();
+                ctx.translate(centerX, centerY);
+                ctx.rotate(angle + arc / 2);
+                ctx.textAlign = "right";
+                ctx.fillStyle = "white";
+                ctx.font = "bold 18px Arial";
+                ctx.fillText(num, radius - 15, 7);
+                ctx.restore();
+            });
+        }
+
+        drawWheel();
+
+        btn.addEventListener('click', () => {
+            const betNumber = parseInt(document.getElementById('bet-number').value);
+            const betAmount = parseInt(document.getElementById('bet-amount').value);
+
+            if (isNaN(betNumber) || betNumber < 0 || betNumber > 36) {
+                alert("Выберите число от 0 до 36!");
                 return;
             }
 
             btn.disabled = true;
-            // 6 полных оборотов + случайный угол
-            const extraDegrees = Math.floor(Math.random() * 360) + 2160; 
+            
+            // 6-8 полных оборотов + случайный сектор
+            const spins = 6;
+            const randomSector = Math.floor(Math.random() * numSectors);
+            const extraDegrees = (spins * 360) + (randomSector * (360 / numSectors));
+            
             currentRotation += extraDegrees;
-            wheel.style.transform = `rotate(${currentRotation}deg)`;
+            canvas.style.transform = `rotate(${-currentRotation}deg)`;
 
-            // Ждем 6 секунд (длительность анимации)
             setTimeout(() => {
-                const winningNumber = Math.floor(Math.random() * 36) + 1;
+                // Вычисляем число под указателем (указатель сверху = 270 градусов)
+                const normalizedRotation = currentRotation % 360;
+                const sectorAngle = 360 / numSectors;
+                const winIdx = Math.floor(((normalizedRotation + 90) % 360) / sectorAngle);
+                const actualWinNum = sectors[winIdx];
                 
                 tg.sendData(JSON.stringify({
-                    number: parseInt(betNumber),
-                    amount: parseInt(betAmount),
-                    win: winningNumber
+                    number: betNumber,
+                    amount: betAmount,
+                    win: actualWinNum
                 }));
                 
                 btn.disabled = false;
             }, 6000);
         });
+
         tg.expand();
     </script>
 </body>
